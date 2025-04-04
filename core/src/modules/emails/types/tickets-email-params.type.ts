@@ -1,0 +1,1 @@
+// export type TTicketEmailParams = Array<{ ticket: TicketEntity, qr: string }>
