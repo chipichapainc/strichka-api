@@ -20,7 +20,6 @@ export const joinConfigs = (...configs: ConfigFactory[]) =>
         return configs.reduce((prev, curr) => Object.assign(prev, curr()), {})
     }
 
-export const liqpayEnvConfig = configFactoryEnv(LiqPayEnvConfig)
 export const cryptoEnvConfig = configFactoryEnv(CryptoEnvConfig)
 export const databaseEnvConfig = configFactoryEnv(DatabaseEnvConfig)
 export const smtpEnvConfig = configFactoryEnv(SmtpEnvConfig)

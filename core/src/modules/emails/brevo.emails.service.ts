@@ -6,7 +6,7 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import { filesByExtension } from "src/common/helpers/files-by-extension";
 import { EmailsService } from "./emails.service";
-import { TTicketEmailParams } from "./types/tickets-email-params.type";
+// import { TTicketEmailParams } from "./types/tickets-email-params.type";
 
 @Injectable()
 export class BrevoEmailsService implements EmailsService {
