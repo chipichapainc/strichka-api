@@ -1,32 +1,32 @@
-import { CryptoService } from "./crypto.service";
+import { EncryptionService } from "./encryption.service";
 
-describe('CryptoService', () => {
-    let cryptoService: CryptoService;
+describe('EncryptionService', () => {
+    let encryptionService: EncryptionService;
 
     beforeEach(() => {
-        cryptoService = new CryptoService();
+        encryptionService = new EncryptionService();
     });
 
     describe('encryption', () => {
         it('.encrypt() should return a string', async () => {
             const data = { foo: "bar" };
             const secret = "password"
-            const encrypted = await cryptoService.encrypt(secret, data);
+            const encrypted = await encryptionService.encrypt(secret, data);
             expect(typeof encrypted).toEqual('string');
         });
         it('decrypted data should match original data', async () => {
             const data = { foo: "bar" };
             const secret = "password"
-            const encrypted = await cryptoService.encrypt(secret, data);
-            expect(await cryptoService.decrypt(secret, encrypted)).toEqual(data)
+            const encrypted = await encryptionService.encrypt(secret, data);
+            expect(await encryptionService.decrypt(secret, encrypted)).toEqual(data)
         });
         it('.decrypt() should fail on invalid secret', async () => {
             const data = { foo: "bar" };
             const secret = "password"
-            const encrypted = await cryptoService.encrypt(secret, data);
+            const encrypted = await encryptionService.encrypt(secret, data);
             let decrypted;
             try {
-                decrypted = await cryptoService.decrypt("different_password", encrypted)
+                decrypted = await encryptionService.decrypt("different_password", encrypted)
             } catch (e) {
                 expect(e).toBeDefined();
             }
@@ -37,7 +37,7 @@ describe('CryptoService', () => {
             const secret = "password"
             let decrypted;
             try {
-                decrypted = await cryptoService.decrypt(secret, encrypted)
+                decrypted = await encryptionService.decrypt(secret, encrypted)
             } catch (e) {
                 expect(e).toBeDefined();
             }

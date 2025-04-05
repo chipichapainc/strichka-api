@@ -5,6 +5,7 @@ import { DatabaseEnvConfig } from "./db.config";
 import { validateClass } from "src/common/helpers/validate-class.helper";
 import { SmtpEnvConfig } from "./smtp.config";
 import { ApiEnvConfig } from "./api.config";
+import { JwtEnvConfig } from "./jwt.config";
 
 export const configFactoryEnv = <T extends object>(cls: ClassConstructor<T>) => 
     function() {
@@ -24,3 +25,4 @@ export const cryptoEnvConfig = configFactoryEnv(CryptoEnvConfig)
 export const databaseEnvConfig = configFactoryEnv(DatabaseEnvConfig)
 export const smtpEnvConfig = configFactoryEnv(SmtpEnvConfig)
 export const apiEnvConfig = configFactoryEnv(ApiEnvConfig)
+export const jwtEnvConfig = configFactoryEnv(JwtEnvConfig)
