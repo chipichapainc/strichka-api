@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { JwtEnvConfig } from 'src/configs/jwt.config';
 import { CryptoModule } from '../crypto/crypto.module';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -14,12 +15,13 @@ import { CryptoModule } from '../crypto/crypto.module';
       useFactory: (configService: ConfigService<JwtEnvConfig>) => ({
         secret: configService.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
+          algorithm: "HS256",
           expiresIn: configService.getOrThrow<string>("JWT_EXPIRES_IN"),
         },
       }),
     }),
   ],
-  providers: [AuthService],
-  exports: [AuthService],
+  providers: [AuthService, JwtAuthGuard],
+  exports: [AuthService, JwtAuthGuard],
 })
 export class AuthModule {}
