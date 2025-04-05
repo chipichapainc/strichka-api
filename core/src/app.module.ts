@@ -5,6 +5,7 @@ import { dbConfig } from './db/typeorm-datasource';
 import { CryptoModule } from './modules/crypto/crypto.module';
 import { EmailsModule } from './modules/emails/emails.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
     imports: [
@@ -12,6 +13,7 @@ import { AuthModule } from './modules/auth/auth.module';
         AuthModule,
         CryptoModule,
         EmailsModule,
+        UsersModule,
     ],
     controllers: [AppController],
     providers: [],

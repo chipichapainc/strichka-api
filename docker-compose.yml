@@ -9,6 +9,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - 8010:8080
     env_file: ./core/.env
@@ -28,3 +30,17 @@ services:
       timeout: 1s
       retries: 5
     env_file: ./db/.env
+  redis:
+    image: redis:7-alpine
+    container_name: core-redis
+    restart: always
+    ports:
+      - 8030:6379
+    volumes:
+      - ./redis/data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 1s
+      retries: 5
