@@ -81,6 +81,6 @@ export class AccessService {
         if (grantedPermission === Permissions.READ_WRITE) {
             return true; // 'rw' includes both 'r' and 'w'
         }
-        return grantedPermission === requiredPermission;
+        return grantedPermission.includes(requiredPermission);
     }
 } 
