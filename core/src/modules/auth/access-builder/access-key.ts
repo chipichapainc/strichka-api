@@ -17,6 +17,6 @@ export class AccessKey {
     }
 
     toString(): string {
-        return `${this.type}:${this.key.join('/')}`;
+        return `a:${this.type}/${this.key.join('/')}`;
     }
 }
