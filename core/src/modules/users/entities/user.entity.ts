@@ -2,27 +2,27 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-  @Column({ unique: true, nullable: false })
-  email: string;
+    @Column({ unique: true, nullable: false })
+    email: string;
 
-  @Column({ nullable: false })
-  password: string;
+    @Column({ nullable: false })
+    password: string;
 
-  @Column({ nullable: true })
-  firstName: string;
+    @Column({ nullable: true })
+    firstName: string;
 
-  @Column({ nullable: true })
-  lastName: string;
+    @Column({ nullable: true })
+    lastName: string;
 
-  @Column({ nullable: false, unique: true })
-  handle: string;
+    @Column({ nullable: false, unique: true })
+    handle: string;
 
-  @CreateDateColumn()
-  createdAt: Date;
+    @CreateDateColumn()
+    createdAt: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+    @UpdateDateColumn()
+    updatedAt: Date;
 } 

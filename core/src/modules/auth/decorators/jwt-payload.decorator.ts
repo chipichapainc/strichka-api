@@ -13,8 +13,8 @@ import { IJwtUserPayload } from '../types/jwt.user.payload.interface';
  * }
  */
 export const JwtPayload = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): IJwtUserPayload => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.jwtPayload;
-  },
+    (data: unknown, ctx: ExecutionContext): IJwtUserPayload => {
+        const request = ctx.switchToHttp().getRequest();
+        return request.jwtPayload;
+    },
 ); 

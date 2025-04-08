@@ -5,15 +5,15 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService implements IAuthService {
-  constructor(
-    private readonly jwtService: JwtService,
-  ) {}
+    constructor(
+        private readonly jwtService: JwtService,
+    ) { }
 
-  async generateToken(payload: IJwtUserPayload): Promise<string> {
-    return this.jwtService.sign(payload);
-  }
+    async generateToken(payload: IJwtUserPayload): Promise<string> {
+        return this.jwtService.sign(payload);
+    }
 
-  async verifyToken(token: string): Promise<IJwtUserPayload> {
-    return this.jwtService.verify<IJwtUserPayload>(token);
-  }
+    async verifyToken(token: string): Promise<IJwtUserPayload> {
+        return this.jwtService.verify<IJwtUserPayload>(token);
+    }
 } 

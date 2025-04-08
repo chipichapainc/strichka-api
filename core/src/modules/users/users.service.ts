@@ -7,21 +7,21 @@ import { IUserCreateParams } from './types/user-create.params';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-  ) {}
+    constructor(
+        @InjectRepository(User)
+        private readonly usersRepository: Repository<User>,
+    ) { }
 
-  async findById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id } });
-  }
+    async findById(id: string): Promise<User | null> {
+        return this.usersRepository.findOne({ where: { id } });
+    }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
-  }
+    async findByEmail(email: string): Promise<User | null> {
+        return this.usersRepository.findOne({ where: { email } });
+    }
 
-  async create(params: IUserCreateParams): Promise<User> {
-    const user = this.usersRepository.create(params);
-    return this.usersRepository.save(user);
-  }
+    async create(params: IUserCreateParams): Promise<User> {
+        const user = this.usersRepository.create(params);
+        return this.usersRepository.save(user);
+    }
 } 

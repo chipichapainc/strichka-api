@@ -7,40 +7,40 @@ import { UserPasswordService } from '../user-password/user-password.service';
 
 @Controller('auth')
 export class AuthController implements IAuthController {
-  constructor(
-    private readonly userPasswordService: UserPasswordService,
-    private readonly usersService: UsersService,
-    private readonly authService: AuthService,
-  ) {}
+    constructor(
+        private readonly userPasswordService: UserPasswordService,
+        private readonly usersService: UsersService,
+        private readonly authService: AuthService,
+    ) { }
 
-  @Post()
-  async login(@Body() body: { email: string; password: string }): Promise<{ token: string }> {
-    if (!body.email || !body.password) {
-      throw new UnauthorizedException('Email and password are required');
+    @Post()
+    async login(@Body() body: { email: string; password: string }): Promise<{ token: string }> {
+        if (!body.email || !body.password) {
+            throw new UnauthorizedException('Email and password are required');
+        }
+
+        // Find user by email
+        const user = await this.usersService.findByEmail(body.email);
+        if (!user) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        // Validate password
+        const isPasswordValid = await this.userPasswordService.validatePassword(
+            body.password,
+            user.password
+        );
+
+        if (!isPasswordValid) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        // Create JWT payload with user ID
+        const payload: IJwtUserPayload = { id: user.id };
+
+        // Generate token
+        const token = await this.authService.generateToken(payload);
+
+        return { token };
     }
-
-    // Find user by email
-    const user = await this.usersService.findByEmail(body.email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Validate password
-    const isPasswordValid = await this.userPasswordService.validatePassword(
-      body.password,
-      user.password
-    );
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Create JWT payload with user ID
-    const payload: IJwtUserPayload = { id: user.id };
-    
-    // Generate token
-    const token = await this.authService.generateToken(payload);
-    
-    return { token };
-  }
 } 

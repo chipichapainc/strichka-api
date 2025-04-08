@@ -1,6 +1,7 @@
 db/*
 !db/.env.example
 
-redis
+redis/*
+!redis/.env.example
 .vscode
 .vscode/*

@@ -6,6 +6,7 @@ import { CryptoModule } from './modules/crypto/crypto.module';
 import { EmailsModule } from './modules/emails/emails.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
     imports: [
@@ -14,6 +15,7 @@ import { UsersModule } from './modules/users/users.module';
         CryptoModule,
         EmailsModule,
         UsersModule,
+        RedisModule,
     ],
     controllers: [AppController],
     providers: [],

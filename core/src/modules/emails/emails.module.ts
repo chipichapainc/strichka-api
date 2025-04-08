@@ -6,16 +6,16 @@ import { EmailsService } from './emails.service';
 import { smtpEnvConfig } from 'src/configs/configs';
 
 const EmailsServiceProvider: FactoryProvider<EmailsService> = {
-  provide: EmailsService,
-  useFactory: (config: ConfigService<SmtpEnvConfig>) => {
-    switch(config.getOrThrow("SMTP_PROVIDER")) {
-        case SMTPProviders.BREVO:
-            return new BrevoEmailsService(config.getOrThrow("SMTP_API_KEY"));
-        default:
-            throw new Error("Invalid SMTP provider")
-    }
-  },
-  inject: [ConfigService],
+    provide: EmailsService,
+    useFactory: (config: ConfigService<SmtpEnvConfig>) => {
+        switch (config.getOrThrow("SMTP_PROVIDER")) {
+            case SMTPProviders.BREVO:
+                return new BrevoEmailsService(config.getOrThrow("SMTP_API_KEY"));
+            default:
+                throw new Error("Invalid SMTP provider")
+        }
+    },
+    inject: [ConfigService],
 };
 
 @Module({
