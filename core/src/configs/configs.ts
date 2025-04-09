@@ -12,9 +12,18 @@ export const configFactoryEnv = <T extends object>(
     cls: ClassConstructor<T>
 ) => function() {
     const { success, instance, errors } = validateClass(process.env, cls);
-    if (!success) {
+    if (!success)
         throw errors[0];
-    }
+    return instance;
+};
+
+export const configFactoryObject = <T extends object>(
+    cls: ClassConstructor<T>,
+    obj: T
+) => function() {
+    const { success, instance, errors } = validateClass(obj, cls);
+    if (!success)
+        throw errors[0];
     return instance;
 };
 

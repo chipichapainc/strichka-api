@@ -35,10 +35,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy, IRedisServic
         await this.redisClient.quit();
     }
 
-    /**
-     * Creates a new Redis transaction
-     * @returns A Redis transaction object that can be used to queue commands
-     */
     multi() {
         return this.redisClient.multi();
     }

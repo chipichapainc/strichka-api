@@ -1,12 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { PasswordHashingService } from '../crypto/password-hashing.service';
-import { IJwtUserPayload } from '../auth/types/jwt.user.payload.interface';
 
 @Injectable()
 export class UserPasswordService {
     constructor(
-        private readonly jwtService: JwtService,
         private readonly passwordHashingService: PasswordHashingService,
     ) { }
 

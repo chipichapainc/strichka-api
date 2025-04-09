@@ -7,13 +7,12 @@ import { IRedisService } from './types/redis.service.interface';
 
 const RedisServiceProvider: FactoryProvider<IRedisService> = {
     provide: RedisService,
-    useFactory: (configService: ConfigService) => {
-        const config = configService.get<RedisEnvConfig>('redis');
+    useFactory: (configService: ConfigService<RedisEnvConfig>) => {
         return new RedisService(
-            config.REDIS_HOST,
-            config.REDIS_PORT,
-            config.REDIS_PASSWORD,
-            config.REDIS_DB
+            configService.getOrThrow("REDIS_HOST"),
+            configService.getOrThrow("REDIS_PORT"),
+            configService.getOrThrow("REDIS_PASSWORD"),
+            configService.getOrThrow("REDIS_DB")
         );
     },
     inject: [ConfigService],
