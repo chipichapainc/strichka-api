@@ -4,9 +4,11 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UsersController } from './users.controller';
 import { UserPasswordModule } from '../user-password/user-password.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
     imports: [
+        AuthModule,
         TypeOrmModule.forFeature([User]),
         UserPasswordModule,
     ],

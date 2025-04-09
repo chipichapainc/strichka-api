@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { Permission, Permissions } from './types/permission.types';
 import { AccessKey } from './access-builder/access-key';
+import { SingleOrMultipleAccessKeys, SingleOrMultipleAccessKeysValidationResult } from './types/single-or-multiple-access-keys.type';
 
 @Injectable()
 export class AccessService {
@@ -39,20 +40,15 @@ export class AccessService {
      * @param requiredPermission - The permission to check for (e.g., Permissions.READ, Permissions.WRITE)
      * @returns Promise that resolves to a boolean or array of boolean values indicating access
      */
-    async verifyAccess(
-        accessKeys: AccessKey | AccessKey[],
+    async verifyAccess<T extends SingleOrMultipleAccessKeys>(
+        accessKeys: T,
         requiredPermission: Permission,
-    ): Promise<boolean | boolean[]> {
-        // Handle single access key case
-        if (!Array.isArray(accessKeys)) {
-            // Get the permission for the access key
-            const permission = await this.redisService.get(accessKeys.toString());
+    ): Promise<SingleOrMultipleAccessKeysValidationResult<T>> {
+        if (Array.isArray(accessKeys)) {
+            if (accessKeys.length === 0) {
+                return [] as SingleOrMultipleAccessKeysValidationResult<T>
+            }
 
-            // Check if the user has the required permission
-            return permission !== null && this.hasPermission(permission as Permission, requiredPermission);
-        } else if (accessKeys.length === 0) {
-            return [];
-        } else {
             // Use Redis pipelining to get all permissions in a single round trip
             const pipeline = this.redisService.multi();
 
@@ -66,9 +62,37 @@ export class AccessService {
 
             // Process results
             return results.map(permission =>
-                permission !== null && this.hasPermission(permission as Permission, requiredPermission)
-            );
+                permission !== null
+                    && this.hasPermission(
+                        permission as Permission,
+                        requiredPermission
+                    )
+            ) as SingleOrMultipleAccessKeysValidationResult<T>;
+        } else {
+            // Get the permission for the access key
+            const permission = await this.redisService.get(accessKeys.toString());
+
+            // Check if the user has the required permission
+            return permission !== null
+                && this.hasPermission(
+                    permission as Permission,
+                    requiredPermission
+                ) as SingleOrMultipleAccessKeysValidationResult<T>;
         }
+    }
+
+    /**
+     * Verifies if a user has all the required permissions for one or more resources
+     * @param accessKeys - A single access key or array of access keys for the resources
+     * @param requiredPermissions - The permissions to check for (e.g., Permissions.READ, Permissions.WRITE)
+     * @returns Promise that resolves to a boolean indicating if all permissions are granted
+     */
+    async verifyAllAccess(
+        accessKeys: AccessKey[],
+        requiredPermissions: Permission,
+    ): Promise<boolean> {
+        const results = await this.verifyAccess(accessKeys, requiredPermissions);
+        return results.every(result => result);
     }
 
     /**
@@ -83,4 +107,4 @@ export class AccessService {
         }
         return grantedPermission.includes(requiredPermission);
     }
-} 
+}

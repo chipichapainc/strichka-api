@@ -10,6 +10,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtEnvConfig } from 'src/configs/jwt.config';
 import { RedisModule } from '../redis/redis.module';
 import { AccessService } from './access.service';
+
 @Module({
     imports: [
         UserPasswordModule,
