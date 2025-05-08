@@ -1,11 +1,11 @@
 networks:
-  default:
-    name: strichka
+  backend:
 
 services:
   api:
     build: ./core
-    container_name: core-api
+    container_name: strichka-api
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
@@ -13,11 +13,13 @@ services:
         condition: service_healthy
     ports:
       - 8010:8080
+    networks:
+      - backend
     env_file: ./core/.env
   db:
     image: postgres:14-alpine
-    container_name: core-db
-    restart: always
+    container_name: strichka-db
+    restart: unless-stopped
     user: postgres
     ports:
       - 8020:5432
@@ -30,17 +32,20 @@ services:
       timeout: 1s
       retries: 5
     env_file: ./db/.env
+    networks:
+      - backend
   redis:
-    image: redis:7-alpine
-    container_name: core-redis
-    restart: always
+    build: ./redis
+    container_name: strichka-redis
     ports:
       - 8030:6379
     volumes:
       - ./redis/data:/data
-    command: redis-server --appendonly yes
+      - ./redis/.env:/.env
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 1s
       retries: 5
+    networks:
+      - backend

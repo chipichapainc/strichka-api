@@ -2,6 +2,11 @@ db/*
 !db/.env.example
 
 redis/*
+!redis/redis.conf.template
+!redis/Dockerfile
+!redis/entrypoint.sh
+!redis/prepare-redis-conf.sh
 !redis/.env.example
+
 .vscode
 .vscode/*

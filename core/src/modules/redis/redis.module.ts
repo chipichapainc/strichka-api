@@ -12,7 +12,9 @@ const RedisServiceProvider: FactoryProvider<IRedisService> = {
             configService.getOrThrow("REDIS_HOST"),
             configService.getOrThrow("REDIS_PORT"),
             configService.getOrThrow("REDIS_PASSWORD"),
-            configService.getOrThrow("REDIS_DB")
+            configService.getOrThrow("REDIS_DB"),
+            configService.get("REDIS_USER"),
+            configService.get("REDIS_USER_PASSWORD")
         );
     },
     inject: [ConfigService],

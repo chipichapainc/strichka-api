@@ -57,6 +57,13 @@ export class UsersController {
             lastName: dto.lastName,
         });
 
+        await this.accessService.grantAccess(
+            AccessKeyBuilder.forUser(user.id)
+                .to("users", user.id)
+                .build(),
+            Permissions.READ_WRITE
+        );
+
         return user;
     }
 } 

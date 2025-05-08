@@ -9,15 +9,19 @@ export class RedisService implements OnModuleInit, OnModuleDestroy, IRedisServic
     constructor(
         private host: string,
         private port: number,
-        private password?: string,
-        private db: number = 0
+        private password: string,
+        private db: number = 0,
+        private user?: string,
+        private userPassword?: string
     ) { }
 
     async onModuleInit() {
         this.redisClient = createClient({
             url: `redis://${this.host}:${this.port}`,
-            password: this.password,
             database: this.db,
+            ...(this.user && this.userPassword
+                ? { username: this.user, password: this.userPassword }
+                : { password: this.password })
         });
 
         this.redisClient.on('error', (error) => {

@@ -8,7 +8,6 @@ import { AuthModule } from '../auth/auth.module';
 
 @Module({
     imports: [
-        AuthModule,
         TypeOrmModule.forFeature([User]),
         UserPasswordModule,
     ],

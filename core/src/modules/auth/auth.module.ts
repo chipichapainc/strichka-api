@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthController } from './auth.controller';
@@ -11,6 +11,7 @@ import { JwtEnvConfig } from 'src/configs/jwt.config';
 import { RedisModule } from '../redis/redis.module';
 import { AccessService } from './access.service';
 
+@Global()
 @Module({
     imports: [
         UserPasswordModule,
