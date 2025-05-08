@@ -1,4 +1,4 @@
-import { Body, Controller, Post, ConflictException, Get, Param, NotFoundException, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Post, ConflictException, Get, Param, NotFoundException, UseGuards, ForbiddenException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserPasswordService } from '../user-password/user-password.service';
@@ -12,6 +12,8 @@ import { Permissions } from '../auth/types/permission.types';
 
 @Controller('users')
 export class UsersController {
+    private readonly logger = new Logger(UsersController.name);
+
     constructor(
         private readonly accessService: AccessService,
         private readonly usersService: UsersService,
@@ -49,20 +51,28 @@ export class UsersController {
 
         const hashedPassword = await this.userPasswordService.hashPassword(dto.password);
 
-        const user = await this.usersService.create({
-            email: dto.email,
-            password: hashedPassword,
-            handle: dto.nickname,
-            firstName: dto.firstName,
-            lastName: dto.lastName,
-        });
+        let user: User;
+        try {
+            user = await this.usersService.create({
+                email: dto.email,
+                password: hashedPassword,
+                handle: dto.nickname,
+                firstName: dto.firstName,
+                lastName: dto.lastName,
+            });
 
-        await this.accessService.grantAccess(
-            AccessKeyBuilder.forUser(user.id)
-                .to("users", user.id)
-                .build(),
-            Permissions.READ_WRITE
-        );
+            await this.accessService.grantAccess(
+                AccessKeyBuilder.forUser(user.id)
+                    .to("users", user.id)
+                    .build(),
+                Permissions.READ_WRITE
+            );
+        } catch (error) {
+            if (user)
+                await this.usersService.delete(user.id);
+            this.logger.error(error);
+            throw new InternalServerErrorException('Failed to create user');
+        }
 
         return user;
     }

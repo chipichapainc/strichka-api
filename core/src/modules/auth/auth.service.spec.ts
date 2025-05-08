@@ -22,7 +22,7 @@ describe('AuthService', () => {
                     provide: JwtService,
                     useValue: {
                         sign: jest.fn(),
-                        verify: jest.fn(),
+                        verifyAsync: jest.fn(),
                         decode: jest.fn(),
                     },
                 },
@@ -68,7 +68,7 @@ describe('AuthService', () => {
             expect(redisService.set).toHaveBeenCalledWith(
                 tokenKey,
                 expectedToken,
-                decodedToken.payload.exp
+                { expiresAt: decodedToken.payload.exp + 1 }
             );
         });
 
@@ -119,73 +119,70 @@ describe('AuthService', () => {
     describe('verifyToken', () => {
         it('should verify and return the payload from a valid token', async () => {
             const token = 'valid.jwt.token';
-            const expectedPayload: IJwtUserPayload = { id: 'user123' };
+            const expectedPayload = {
+                header: { alg: 'HS256', typ: 'JWT' },
+                payload: { id: 'user123', jti: 'token-id', exp: 3600, iat: 1000 },
+                signature: 'signature'
+            };
 
-            (jwtService.verify as jest.Mock).mockReturnValue(expectedPayload);
+            (jwtService.verifyAsync as jest.Mock).mockResolvedValue(expectedPayload);
+            (redisService.get as jest.Mock).mockResolvedValue('token-data');
 
             const payload = await service.verifyToken(token);
 
             expect(payload).toEqual(expectedPayload);
-            expect(jwtService.verify).toHaveBeenCalledWith(token);
+            expect(jwtService.verifyAsync).toHaveBeenCalledWith(token, {
+                complete: true,
+            });
         });
 
         it('should throw an error for invalid token', async () => {
             const token = 'invalid.jwt.token';
             const error = new Error('Invalid token');
 
-            (jwtService.verify as jest.Mock).mockImplementation(() => {
-                throw error;
-            });
+            (jwtService.verifyAsync as jest.Mock).mockRejectedValue(error);
 
             await expect(service.verifyToken(token)).rejects.toThrow(error);
-            expect(jwtService.verify).toHaveBeenCalledWith(token);
+            expect(jwtService.verifyAsync).toHaveBeenCalledWith(token, {
+                complete: true,
+            });
         });
 
         it('should throw an error for malformed token', async () => {
             const token = 'malformed.token';
             const error = new Error('Malformed token');
 
-            (jwtService.verify as jest.Mock).mockImplementation(() => {
-                throw error;
-            });
+            (jwtService.verifyAsync as jest.Mock).mockRejectedValue(error);
 
             await expect(service.verifyToken(token)).rejects.toThrow(error);
-            expect(jwtService.verify).toHaveBeenCalledWith(token);
+            expect(jwtService.verifyAsync).toHaveBeenCalledWith(token, {
+                complete: true,
+            });
         });
 
         it('should throw an error for expired token', async () => {
             const token = 'expired.jwt.token';
             const error = new Error('Token expired');
 
-            (jwtService.verify as jest.Mock).mockImplementation(() => {
-                throw error;
-            });
+            (jwtService.verifyAsync as jest.Mock).mockRejectedValue(error);
 
             await expect(service.verifyToken(token)).rejects.toThrow(error);
-            expect(jwtService.verify).toHaveBeenCalledWith(token);
+            expect(jwtService.verifyAsync).toHaveBeenCalledWith(token, {
+                complete: true,
+            });
         });
     });
 
     describe('deleteToken', () => {
         it('should delete a token from Redis and return its ID', async () => {
-            const token = 'valid.jwt.token';
-            const decodedToken = {
-                header: { alg: 'HS256', typ: 'JWT' },
-                payload: { id: 'user123', jti: 'token-id', exp: 3600, iat: 1000 },
-                signature: 'signature'
-            };
-            const tokenKey = JwtTokenAccessKeyBuilder.forToken(decodedToken).build();
+            const tokenId = 'token-id';
+            const tokenKey = JwtTokenAccessKeyBuilder.forId(tokenId).build();
 
-            (jwtService.decode as jest.Mock).mockReturnValue(decodedToken);
             (redisService.del as jest.Mock).mockResolvedValue(1);
 
-            const result = await service.deleteToken(token);
+            const result = await service.deleteToken(tokenId);
 
-            expect(result).toBe('token-id');
-            expect(jwtService.decode).toHaveBeenCalledWith(token, {
-                complete: true,
-                json: true
-            });
+            expect(result).toBe(tokenId);
             expect(redisService.del).toHaveBeenCalledWith(tokenKey);
         });
     });

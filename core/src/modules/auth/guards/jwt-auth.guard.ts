@@ -1,10 +1,12 @@
-import { Injectable, ExecutionContext, UnauthorizedException, CanActivate } from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException, CanActivate, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { IJwtUserPayload } from '../types/jwt.token.interface';
 import { AuthService } from '../auth.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+    private readonly logger = new Logger(JwtAuthGuard.name);
+
     constructor(private readonly authService: AuthService) { }
 
     canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
@@ -30,14 +32,33 @@ export class JwtAuthGuard implements CanActivate {
         }
 
         try {
-            const payload: IJwtUserPayload = await this.authService.verifyToken(token);
+            const { payload } = await this.authService.verifyToken(token);
 
             // Attach user payload to request for later use
             request.jwtPayload = payload;
 
             return true;
         } catch (error) {
-            throw new UnauthorizedException('Invalid JWT token');
+            this.logger.error(error, {
+                headers: request.headers,
+                method: request.method,
+                url: request.url,
+                httpVersion: request.httpVersion,
+                body: request.body,
+                cookies: request.cookies,
+                path: request.path,
+                protocol: request.protocol,
+                query: request.query,
+                hostname: request.hostname,
+                ip: request.ip,
+                originalUrl: request.originalUrl,
+                params: request.params,
+            });
+            if (process.env.NODE_ENV === 'production') {
+                throw new UnauthorizedException();
+            } else {
+                throw error;
+            }
         }
     }
 } 

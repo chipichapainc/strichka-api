@@ -4,7 +4,7 @@ import * as brevo from "@getbrevo/brevo"
 import * as hbs from 'handlebars';
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import { filesByExtension } from "src/common/helpers/files-by-extension";
+import { filesByExtension } from "src/common/helpers/files-by-extension.helper";
 import { EmailsService } from "./emails.service";
 // import { TTicketEmailParams } from "./types/tickets-email-params.type";
 

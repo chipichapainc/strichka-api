@@ -1,9 +1,10 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { createClient, RedisClientType } from 'redis';
-import { IRedisService } from './types/redis.service.interface';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { createClient, RedisClientType, SetOptions } from 'redis';
+import { IRedisService, TRedisSetOptions } from './types/redis.service.interface';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy, IRedisService {
+    private readonly logger = new Logger(RedisService.name);
     private redisClient: RedisClientType;
 
     constructor(
@@ -25,7 +26,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy, IRedisServic
         });
 
         this.redisClient.on('error', (error) => {
-            console.error('Redis connection error:', error);
+            this.logger.error('Redis connection error:', error);
         });
 
         await this.redisClient.connect();
@@ -35,15 +36,46 @@ export class RedisService implements OnModuleInit, OnModuleDestroy, IRedisServic
         await this.redisClient.quit();
     }
 
+    private mapSetOptions(options: TRedisSetOptions): SetOptions {
+        const setOptions: SetOptions = {};
+        if ('existForMs' in options && options.existForMs) {
+            setOptions.EX = options.existForMs;
+        } else if ('expiresAt' in options && options.expiresAt) {
+            setOptions.EXAT = (new Date(options.expiresAt)).getTime();
+        }
+
+        if ('ifNotExists' in options && options.ifNotExists) {
+            setOptions.NX = true;
+        } else if ('ifExists' in options && options.ifExists) {
+            setOptions.XX = true;
+        }
+
+        if (options.returnOldValue) {
+            setOptions.GET = true;
+        }
+
+        if (options.keepTtl) {
+            setOptions.KEEPTTL = true;
+        }
+        return setOptions;
+    }
+
     multi() {
         return this.redisClient.multi();
     }
 
-    async set(key: string, value: string, ttl?: number): Promise<void> {
-        if (ttl) {
-            await this.redisClient.set(key, value, { EX: ttl });
-        } else {
-            await this.redisClient.set(key, value);
+    /**
+     * Set a key-value pair in Redis with an optional expiration time in milliseconds
+     * @param key - The key to set
+     * @param value - The value to set
+     * @param options - The options to set
+     */
+    async set(key: string, value: string, options?: TRedisSetOptions): Promise<void> {
+        try {
+            await this.redisClient.set(key, value, this.mapSetOptions(options));
+        } catch (error) {
+            this.logger.error(error);
+            throw error;
         }
     }
 

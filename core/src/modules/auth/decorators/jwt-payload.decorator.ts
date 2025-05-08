@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { IJwtUserPayload } from '../types/jwt.token.interface';
+import { IJwtPayload } from '../types/jwt.token.interface';
 
 /**
  * Custom decorator to extract the JWT payload from the request
@@ -13,7 +13,7 @@ import { IJwtUserPayload } from '../types/jwt.token.interface';
  * }
  */
 export const JwtPayload = createParamDecorator(
-    (data: unknown, ctx: ExecutionContext): IJwtUserPayload => {
+    (data: unknown, ctx: ExecutionContext): IJwtPayload => {
         const request = ctx.switchToHttp().getRequest();
         return request.jwtPayload;
     },

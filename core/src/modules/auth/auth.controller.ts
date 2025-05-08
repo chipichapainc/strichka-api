@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { IAuthController } from './types/auth.controller.interface';
-import { IJwtUserPayload } from './types/jwt.token.interface';
+import { IJwtPayload, IJwtUserPayload } from './types/jwt.token.interface';
 import { UsersService } from '../users/users.service';
 import { UserPasswordService } from '../user-password/user-password.service';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtPayload } from './decorators/jwt-payload.decorator';
 
 @Controller('auth')
 export class AuthController implements IAuthController {
@@ -50,5 +52,11 @@ export class AuthController implements IAuthController {
         const token = await this.authService.generateToken(payload);
 
         return { token };
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete('logout')
+    async logout(@JwtPayload() jwtPayload: IJwtPayload): Promise<void> {
+        await this.authService.deleteToken(jwtPayload.jti);
     }
 } 

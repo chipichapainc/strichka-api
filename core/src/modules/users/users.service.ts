@@ -28,6 +28,11 @@ export class UsersService {
         return this.usersRepository.findOne(defaultOptions);
     }
 
+
+    async delete(id: string): Promise<void> {
+        await this.usersRepository.delete(id);
+    }
+
     async create(params: IUserCreateParams): Promise<User> {
         const user = this.usersRepository.create(params);
         return this.usersRepository.save(user);
