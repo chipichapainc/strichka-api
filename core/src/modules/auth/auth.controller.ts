@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { IAuthController } from './types/auth.controller.interface';
-import { IJwtUserPayload } from './types/jwt.user.payload.interface';
+import { IJwtUserPayload } from './types/jwt.token.interface';
 import { UsersService } from '../users/users.service';
 import { UserPasswordService } from '../user-password/user-password.service';
 
@@ -20,7 +20,15 @@ export class AuthController implements IAuthController {
         }
 
         // Find user by email
-        const user = await this.usersService.findByEmail(body.email);
+        const user = await this.usersService.findByEmail(
+            body.email,
+            {
+                select: {
+                    id: true,
+                    password: true
+                }
+            }
+        );
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }

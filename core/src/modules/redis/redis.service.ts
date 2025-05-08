@@ -28,10 +28,6 @@ export class RedisService implements OnModuleInit, OnModuleDestroy, IRedisServic
             console.error('Redis connection error:', error);
         });
 
-        this.redisClient.on('connect', () => {
-            console.log('Successfully connected to Redis');
-        });
-
         await this.redisClient.connect();
     }
 

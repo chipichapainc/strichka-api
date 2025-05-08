@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AccessService } from './access.service';
 import { RedisService } from '../redis/redis.service';
 import { Permission, Permissions } from './types/permission.types';
-import { AccessKey, EAccessKeyType } from './access-builder/access-key';
-import { AccessKeyBuilder } from './access-builder/access-key-builder';
+import { AccessKey, EAccessKeyType } from './builders/access-builder/access-key';
+import { AccessKeyBuilder } from './builders/access-builder/access-key-builder';
 
 describe('AccessService', () => {
     let service: AccessService;
@@ -141,6 +141,94 @@ describe('AccessService', () => {
                 expect(result).toEqual([]);
                 expect(redisService.multi).not.toHaveBeenCalled();
             });
+        });
+    });
+
+    describe('verifyAllAccess', () => {
+        it('should return true when all permissions exist and match', async () => {
+            const accessKeys = [
+                new AccessKey(EAccessKeyType.USER, ['user1', 'posts', 'post1']),
+                new AccessKey(EAccessKeyType.USER, ['user1', 'posts', 'post2']),
+            ];
+            const permission = Permissions.READ;
+
+            jest.spyOn(service, 'verifyAccess').mockResolvedValue([true, true]);
+
+            const result = await service.verifyAllAccess(accessKeys, permission);
+
+            expect(result).toBe(true);
+            expect(service.verifyAccess).toHaveBeenCalledWith(accessKeys, permission);
+        });
+
+        it('should return false when any permission is missing', async () => {
+            const accessKeys = [
+                new AccessKey(EAccessKeyType.USER, ['user1', 'posts', 'post1']),
+                new AccessKey(EAccessKeyType.USER, ['user1', 'posts', 'post2']),
+            ];
+            const permission = Permissions.READ;
+
+            jest.spyOn(service, 'verifyAccess').mockResolvedValue([true, false]);
+
+            const result = await service.verifyAllAccess(accessKeys, permission);
+
+            expect(result).toBe(false);
+            expect(service.verifyAccess).toHaveBeenCalledWith(accessKeys, permission);
+        });
+
+        it('should return false for empty access keys array', async () => {
+            const accessKeys: AccessKey[] = [];
+            const permission = Permissions.READ;
+
+            jest.spyOn(service, 'verifyAccess').mockResolvedValue([]);
+
+            const result = await service.verifyAllAccess(accessKeys, permission);
+
+            expect(result).toBe(true);
+            expect(service.verifyAccess).toHaveBeenCalledWith(accessKeys, permission);
+        });
+    });
+
+    describe('verifyAnyAccess', () => {
+        it('should return true when any permission exists and matches', async () => {
+            const accessKeys = [
+                new AccessKey(EAccessKeyType.USER, ['user1', 'posts', 'post1']),
+                new AccessKey(EAccessKeyType.USER, ['user1', 'posts', 'post2']),
+            ];
+            const permission = Permissions.READ;
+
+            jest.spyOn(service, 'verifyAccess').mockResolvedValue([false, true]);
+
+            const result = await service.verifyAnyAccess(accessKeys, permission);
+
+            expect(result).toBe(true);
+            expect(service.verifyAccess).toHaveBeenCalledWith(accessKeys, permission);
+        });
+
+        it('should return false when no permissions match', async () => {
+            const accessKeys = [
+                new AccessKey(EAccessKeyType.USER, ['user1', 'posts', 'post1']),
+                new AccessKey(EAccessKeyType.USER, ['user1', 'posts', 'post2']),
+            ];
+            const permission = Permissions.READ;
+
+            jest.spyOn(service, 'verifyAccess').mockResolvedValue([false, false]);
+
+            const result = await service.verifyAnyAccess(accessKeys, permission);
+
+            expect(result).toBe(false);
+            expect(service.verifyAccess).toHaveBeenCalledWith(accessKeys, permission);
+        });
+
+        it('should return false for empty access keys array', async () => {
+            const accessKeys: AccessKey[] = [];
+            const permission = Permissions.READ;
+
+            jest.spyOn(service, 'verifyAccess').mockResolvedValue([]);
+
+            const result = await service.verifyAnyAccess(accessKeys, permission);
+
+            expect(result).toBe(false);
+            expect(service.verifyAccess).toHaveBeenCalledWith(accessKeys, permission);
         });
     });
 

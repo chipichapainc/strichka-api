@@ -4,10 +4,10 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserPasswordService } from '../user-password/user-password.service';
 import { User } from './entities/user.entity';
 import { AccessService } from '../auth/access.service';
-import { AccessKeyBuilder } from '../auth/access-builder/access-key-builder';
+import { AccessKeyBuilder } from '../auth/builders/access-builder/access-key-builder';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtPayload } from '../auth/decorators/jwt-payload.decorator';
-import { IJwtUserPayload } from '../auth/types/jwt.user.payload.interface';
+import { IJwtUserPayload } from '../auth/types/jwt.token.interface';
 import { Permissions } from '../auth/types/permission.types';
 
 @Controller('users')
@@ -24,7 +24,7 @@ export class UsersController {
         @Param('id') id: string,
         @JwtPayload() jwtPayload: IJwtUserPayload
     ): Promise<User> {
-        const hasAccess = await this.accessService.verifyAllAccess(
+        const hasAccess = await this.accessService.verifyAnyAccess(
             AccessKeyBuilder.forUser(jwtPayload.id)
                 .to("users", id)
                 .buildAll(),

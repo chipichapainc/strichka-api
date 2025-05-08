@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { Permission, Permissions } from './types/permission.types';
-import { AccessKey } from './access-builder/access-key';
+import { AccessKey } from './builders/access-builder/access-key';
 import { SingleOrMultipleAccessKeys, SingleOrMultipleAccessKeysValidationResult } from './types/single-or-multiple-access-keys.type';
 
 @Injectable()
@@ -93,6 +93,20 @@ export class AccessService {
     ): Promise<boolean> {
         const results = await this.verifyAccess(accessKeys, requiredPermissions);
         return results.every(result => result);
+    }
+    
+    /**
+     * Verifies if a user has any of the required permissions for one or more resources
+     * @param accessKeys - A single access key or array of access keys for the resources
+     * @param requiredPermissions - The permissions to check for (e.g., Permissions.READ, Permissions.WRITE)
+     * @returns Promise that resolves to a boolean indicating if any permissions are granted
+     */
+    async verifyAnyAccess(
+        accessKeys: AccessKey[],
+        requiredPermissions: Permission,
+    ): Promise<boolean> {
+        const results = await this.verifyAccess(accessKeys, requiredPermissions);
+        return results.some(result => result);
     }
 
     /**

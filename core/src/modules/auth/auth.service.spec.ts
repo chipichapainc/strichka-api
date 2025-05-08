@@ -1,11 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
-import { IJwtUserPayload } from './types/jwt.user.payload.interface';
+import { IJwtUserPayload } from './types/jwt.token.interface';
+import { RedisService } from '../redis/redis.service';
+import { JwtTokenAccessKeyBuilder } from './builders/jwt-token-access-builder/jwt-token-access-key.builder';
+
+jest.mock('node:crypto', () => ({
+    randomUUID: jest.fn(() => 'test-uuid')
+}));
 
 describe('AuthService', () => {
     let service: AuthService;
     let jwtService: JwtService;
+    let redisService: RedisService;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -16,6 +23,15 @@ describe('AuthService', () => {
                     useValue: {
                         sign: jest.fn(),
                         verify: jest.fn(),
+                        decode: jest.fn(),
+                    },
+                },
+                {
+                    provide: RedisService,
+                    useValue: {
+                        set: jest.fn(),
+                        get: jest.fn(),
+                        del: jest.fn(),
                     },
                 },
             ],
@@ -23,6 +39,7 @@ describe('AuthService', () => {
 
         service = module.get<AuthService>(AuthService);
         jwtService = module.get<JwtService>(JwtService);
+        redisService = module.get<RedisService>(RedisService);
     });
 
     it('should be defined', () => {
@@ -30,28 +47,72 @@ describe('AuthService', () => {
     });
 
     describe('generateToken', () => {
-        it('should generate a JWT token for a user payload', async () => {
+        it('should generate a JWT token with unique ID and store in Redis', async () => {
             const payload: IJwtUserPayload = { id: 'user123' };
             const expectedToken = 'mock.jwt.token';
+            const tokenKey = JwtTokenAccessKeyBuilder.forId('test-uuid').build();
+            const decodedToken = {
+                header: { alg: 'HS256', typ: 'JWT' },
+                payload: { id: 'user123', jti: 'test-uuid', exp: 3600, iat: 1000 },
+                signature: 'signature'
+            };
 
+            (redisService.get as jest.Mock).mockResolvedValue(null);
             (jwtService.sign as jest.Mock).mockReturnValue(expectedToken);
+            (jwtService.decode as jest.Mock).mockReturnValue(decodedToken);
 
             const token = await service.generateToken(payload);
 
             expect(token).toBe(expectedToken);
-            expect(jwtService.sign).toHaveBeenCalledWith(payload);
+            expect(jwtService.sign).toHaveBeenCalledWith(payload, { jwtid: 'test-uuid' });
+            expect(redisService.set).toHaveBeenCalledWith(
+                tokenKey,
+                expectedToken,
+                decodedToken.payload.exp
+            );
         });
 
-        it('should handle empty payload', async () => {
-            const payload: IJwtUserPayload = { id: '' };
+        it('should retry if token ID already exists in Redis', async () => {
+            const payload: IJwtUserPayload = { id: 'user123' };
             const expectedToken = 'mock.jwt.token';
+            const decodedToken = {
+                header: { alg: 'HS256', typ: 'JWT' },
+                payload: { id: 'user123', jti: 'test-uuid', exp: 3600, iat: 1000 },
+                signature: 'signature'
+            };
 
+            // First attempt finds existing token, second attempt succeeds
+            (redisService.get as jest.Mock)
+                .mockResolvedValueOnce('existing-token')
+                .mockResolvedValueOnce(null);
             (jwtService.sign as jest.Mock).mockReturnValue(expectedToken);
+            (jwtService.decode as jest.Mock).mockReturnValue(decodedToken);
 
             const token = await service.generateToken(payload);
 
             expect(token).toBe(expectedToken);
-            expect(jwtService.sign).toHaveBeenCalledWith(payload);
+            expect(redisService.get).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('decodeToken', () => {
+        it('should decode a JWT token', () => {
+            const token = 'valid.jwt.token';
+            const expectedDecodedToken = {
+                header: { alg: 'HS256', typ: 'JWT' },
+                payload: { id: 'user123', jti: 'token-id', exp: 3600, iat: 1000 },
+                signature: 'signature'
+            };
+
+            (jwtService.decode as jest.Mock).mockReturnValue(expectedDecodedToken);
+
+            const decodedToken = service.decodeToken(token);
+
+            expect(decodedToken).toEqual(expectedDecodedToken);
+            expect(jwtService.decode).toHaveBeenCalledWith(token, {
+                complete: true,
+                json: true
+            });
         });
     });
 
@@ -102,6 +163,30 @@ describe('AuthService', () => {
 
             await expect(service.verifyToken(token)).rejects.toThrow(error);
             expect(jwtService.verify).toHaveBeenCalledWith(token);
+        });
+    });
+
+    describe('deleteToken', () => {
+        it('should delete a token from Redis and return its ID', async () => {
+            const token = 'valid.jwt.token';
+            const decodedToken = {
+                header: { alg: 'HS256', typ: 'JWT' },
+                payload: { id: 'user123', jti: 'token-id', exp: 3600, iat: 1000 },
+                signature: 'signature'
+            };
+            const tokenKey = JwtTokenAccessKeyBuilder.forToken(decodedToken).build();
+
+            (jwtService.decode as jest.Mock).mockReturnValue(decodedToken);
+            (redisService.del as jest.Mock).mockResolvedValue(1);
+
+            const result = await service.deleteToken(token);
+
+            expect(result).toBe('token-id');
+            expect(jwtService.decode).toHaveBeenCalledWith(token, {
+                complete: true,
+                json: true
+            });
+            expect(redisService.del).toHaveBeenCalledWith(tokenKey);
         });
     });
 }); 

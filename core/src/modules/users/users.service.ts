@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { IUserCreateParams } from './types/user-create.params';
@@ -12,12 +12,20 @@ export class UsersService {
         private readonly usersRepository: Repository<User>,
     ) { }
 
-    async findById(id: string): Promise<User | null> {
-        return this.usersRepository.findOne({ where: { id } });
+    async findById(id: string, options?: FindOneOptions<User>): Promise<User | null> {
+        const defaultOptions: FindOneOptions<User> = { 
+            where: { id },
+            ...options
+        };
+        return this.usersRepository.findOne(defaultOptions);
     }
 
-    async findByEmail(email: string): Promise<User | null> {
-        return this.usersRepository.findOne({ where: { email } });
+    async findByEmail(email: string, options?: FindOneOptions<User>): Promise<User | null> {
+        const defaultOptions: FindOneOptions<User> = { 
+            where: { email },
+            ...options
+        };
+        return this.usersRepository.findOne(defaultOptions);
     }
 
     async create(params: IUserCreateParams): Promise<User> {
